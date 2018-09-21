@@ -16,28 +16,35 @@ const importPosts = async (file) => {
     var items = feed.items.filter((item, index) => item['wp:post_type']['#'] === 'post')
     
     // Map to new object type
-    items = items.map(item => {
-        if (item['wp:post_type']['#'] !== 'post') {
-            return
-        }
-
+    items = items.map(item => {            
         const mappedItem = {
             'title': item.title,
             'date': item.date,
             'content': item['content:encoded']['#'],
             'categories': item.categories,
-            'slug': item['wp:post_name']['#']
+            'slug': item['wp:post_name']['#'],
+            'link': item['link']
         }
-
-        // Add passthroughUrl if exists
+        
+        
+        // all all metadata
         const postMeta = item['wp:postmeta']
         if (postMeta) {
-            const metaKey = postMeta['wp:meta_key']['#']
-            if (metaKey == "passthrough_url") {
-                mappedItem.passthroughUrl = postMeta['wp:meta_value']['#']
-            }
-        }
-
+           if(Array.isArray(postMeta)){
+            postMeta.forEach(metaObj => {                             
+                const metaName = metaObj['wp:meta_key']['#'];
+                const metaValue = metaObj['wp:meta_value']['#'];
+                mappedItem[metaName] = metaValue;
+            });
+           }else{
+               if(postMeta['wp:meta_key']){
+                const metaKey = postMeta['wp:meta_key']['#']
+                if (metaKey == "passthrough_url") {
+                    mappedItem.passthroughUrl = postMeta['wp:meta_value']['#']
+                }
+               }
+           }    
+        }        
         // Add images array
         const images = parseImages(mappedItem.content)
         images.forEach(image => {

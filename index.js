@@ -13,9 +13,26 @@ const runner = async () => {
     const inputFilePath = args._[0]
     const outputDir = args._[1]
     
-    const inputFile = fs.readFileSync(inputFilePath, 'utf8')
-    const posts = await importer.importPosts(inputFile)
-    await exporter.exportPosts(posts, outputDir)
+    const inputFile = fs.readFileSync(inputFilePath, 'utf8');
+    let posts;
+    try {
+        posts = await importer.importPosts(inputFile);
+    } catch (e){
+        console.log("RUNNER", e);
+        process.exit();
+    }
+
+    if (posts === undefined){
+        console.log("RUNNER", "No info to export");
+        process.exit();
+    }
+
+    try {
+        await exporter.exportPosts(posts, outputDir)
+    } catch (e){
+        console.log("RUNNER", e);
+    }
 }
 
-runner()
+
+runner();

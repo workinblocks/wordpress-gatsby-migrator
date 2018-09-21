@@ -9,7 +9,12 @@ const exportPosts = (posts, rootPath) => {
     }
 
     posts.forEach(async post => {
-        const postPath = `${__dirname}/${rootPath}${post.slug}`
+        const postPath = `${__dirname}/${rootPath}${post.slug}`;
+        console.log(rootPath)
+        console.log(post.slug)
+        console.log(post.link)
+        
+        return;
         await fs.ensureDir(postPath)
 
         post.images.forEach(async image => {
@@ -23,8 +28,10 @@ const exportPosts = (posts, rootPath) => {
             }
         })
 
-        post.title = post.title.replace(/"/g, "\\\"") // escape quotes
-        const fileContents = templates.post(post.title, post.date.toISOString(), post.passthroughUrl, post.markdownContent)
+        post.title = post.title.replace(/"/g, "\\\"");// escape quotes
+        const {title, date, passthroughUrl, markdownContent} = post;
+        console.log("EXPORTER", post);
+        const fileContents = templates.post(title,date.toISOString(), passthroughUrl, markdownContent);
         await fs.outputFile(`${postPath}/index.md`, fileContents)
     })
 }
