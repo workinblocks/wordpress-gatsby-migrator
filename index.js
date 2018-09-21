@@ -10,9 +10,9 @@ const runner = async () => {
         process.exit()
     }
 
-    const inputFilePath = args._[0]
-    const outputDir = args._[1]
-    
+    const inputFilePath = args._[0];
+    const outputDir = args._[1];
+
     const inputFile = fs.readFileSync(inputFilePath, 'utf8');
     let posts;
     try {
@@ -28,7 +28,7 @@ const runner = async () => {
     }
 
     try {
-        await exporter.exportPosts(posts, outputDir)
+        await exporter.exportPosts(posts, outputDir, args)
     } catch (e){
         console.log("RUNNER", e);
     }

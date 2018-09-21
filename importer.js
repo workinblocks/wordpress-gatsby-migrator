@@ -14,9 +14,9 @@ const importPosts = async (file) => {
 
     // Filter for only blog posts
     var items = feed.items.filter((item, index) => item['wp:post_type']['#'] === 'post')
-    
+
     // Map to new object type
-    items = items.map(item => {            
+    items = items.map(item => {
         const mappedItem = {
             'title': item.title,
             'date': item.date,
@@ -25,13 +25,13 @@ const importPosts = async (file) => {
             'slug': item['wp:post_name']['#'],
             'link': item['link']
         }
-        
-        
+
+
         // all all metadata
         const postMeta = item['wp:postmeta']
         if (postMeta) {
            if(Array.isArray(postMeta)){
-            postMeta.forEach(metaObj => {                             
+            postMeta.forEach(metaObj => {
                 const metaName = metaObj['wp:meta_key']['#'];
                 const metaValue = metaObj['wp:meta_value']['#'];
                 mappedItem[metaName] = metaValue;
@@ -43,20 +43,21 @@ const importPosts = async (file) => {
                     mappedItem.passthroughUrl = postMeta['wp:meta_value']['#']
                 }
                }
-           }    
-        }        
+           }
+        }
         // Add images array
-        const images = parseImages(mappedItem.content)
+        const images = parseImages(mappedItem.content);
+        const MEDIA = "media/";
         images.forEach(image => {
-            mappedItem.content = mappedItem.content.replace(image.url, image.fileName)
+            mappedItem.content = mappedItem.content.replace(image.url, `${MEDIA}${image.fileName}`);
         })
-        mappedItem.images = images
+        mappedItem.images = images;
 
         // Strip out Squarespace content tags
-        mappedItem.content = removeSquarespaceCaptions(mappedItem.content)
+        mappedItem.content = removeSquarespaceCaptions(mappedItem.content);
 
         // Add Markdown conversion
-        mappedItem.markdownContent = turndownService.turndown(mappedItem.content)
+        mappedItem.markdownContent = turndownService.turndown(mappedItem.content);
 
         return mappedItem
     })
@@ -82,7 +83,7 @@ const parseImages = (content) => {
     const images = imagesElements.map((index, item) => {
         const imageName = uuid()
         const imageUrl = item.attribs['src']
-        const imageExtension = path.extname(url.parse(imageUrl).pathname)
+        const imageExtension = path.extname(url.parse(imageUrl).pathname);
         return {
             url: imageUrl,
             fileName: `${imageName}${imageExtension}`
@@ -93,7 +94,7 @@ const parseImages = (content) => {
 
 const removeSquarespaceCaptions = (post) => {
     // remove the caption crap that gets put in by squarespace
-    post = post.replace(/(\[caption.*"])(<.*>)(.*\[\/caption])/g, "$2") 
+    post = post.replace(/(\[caption.*"])(<.*>)(.*\[\/caption])/g, "$2")
     return post
 }
 

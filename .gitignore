@@ -1,4 +1,6 @@
 
+.idea/
+output/
 # Created by https://www.gitignore.io/api/node,macos,visualstudiocode
 
 ### macOS ###

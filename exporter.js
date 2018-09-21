@@ -1,38 +1,53 @@
-const fs = require('fs-extra')
-const fetch = require('node-fetch')
+const fs = require('fs-extra');
+const fetch = require('node-fetch');
+const path = require(`path`);
 
-const templates = require('./templates.js')
+const templates = require('./templates.js');
 
-const exportPosts = (posts, rootPath) => {
+const exportPosts = (posts, rootPath, args) => {
     if (!rootPath.endsWith('/')) {
         rootPath = rootPath + '/'
     }
 
     posts.forEach(async post => {
-        const postPath = `${__dirname}/${rootPath}${post.slug}`;
-        console.log(rootPath)
-        console.log(post.slug)
-        console.log(post.link)
-        
-        return;
-        await fs.ensureDir(postPath)
+        let slug = undefined;
+        if (args.c) { // Try for permalinks
+            if (post.custom_permalink) { //Indeed there is a permalink
+                const lastChar = post.custom_permalink.charAt(post.custom_permalink.length - 1);
+                if (lastChar == "/")
+                    slug = post.custom_permalink.slice(0, post.custom_permalink.length - 2);
+                else
+                    slug = post.custom_permalink;
+            }
+        }
+
+        if (slug === undefined)
+            slug = post.slug;
+
+        const postPath = `${__dirname}/${rootPath}${slug}.md`;
+
+        const lastSep = postPath.lastIndexOf(path.sep);
+        const folderStructure = postPath.slice(0, lastSep);
+        const mediaPath = `${folderStructure}/media`;
+        await fs.ensureDir(folderStructure);
+        await fs.ensureDir(mediaPath);
 
         post.images.forEach(async image => {
             try {
-                const imageResponse = await fetch(image.url)
-                const writeStream = fs.createWriteStream(`${postPath}/${image.fileName}`)
-                imageResponse.body.pipe(writeStream)
+                const imageResponse = await fetch(image.url);
+                const writeStream = fs.createWriteStream(`${mediaPath}/${image.fileName}`);
+                imageResponse.body.pipe(writeStream);
                 await streamAsync(writeStream)
             } catch (error) {
-                console.error(error)
+                console.error("EXPORTER", error);
             }
         })
 
         post.title = post.title.replace(/"/g, "\\\"");// escape quotes
         const {title, date, passthroughUrl, markdownContent} = post;
         console.log("EXPORTER", post);
-        const fileContents = templates.post(title,date.toISOString(), passthroughUrl, markdownContent);
-        await fs.outputFile(`${postPath}/index.md`, fileContents)
+        const fileContents = templates.post(title, date.toISOString(), passthroughUrl, markdownContent);
+        await fs.outputFile(`${postPath}`, fileContents);
     })
 }
 
@@ -50,4 +65,4 @@ const streamAsync = (stream) => {
     })
 }
 
-module.exports = { exportPosts: exportPosts }
+module.exports = {exportPosts: exportPosts}
